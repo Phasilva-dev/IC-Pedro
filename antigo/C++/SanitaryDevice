@@ -1,0 +1,121 @@
+#include <iostream>
+#include <string>
+
+class SanitaryDevice
+{
+protected:
+    double flow; // L por segundo
+    House* house; // Ponteiro para SanitaryLog
+
+public:
+    // Construtor que inicializa os valores
+    SanitaryDevice(double flow) : flow(flow), house(nullptr) {}
+
+    // Destrutor
+    virtual ~SanitaryDevice() {}
+
+    // Método virtual para ser sobrescrito pelas classes derivadas
+    virtual void use(uint8_t intensity_percent, uint16_t duration, uint32_t time_start, Resident& resi) {
+    }
+
+    // Métodos de acesso (getters)
+    double getFlow() const { return flow; }
+};
+
+// Classe para dispositivos individuais, com o atributo 'amount'
+class SharedSanitaryDevice : public SanitaryDevice
+{
+protected:
+    uint8_t amount; // Quantidade desse aparelho sanitário na casa.
+
+public:
+    // Construtor que inicializa os valores, incluindo o amount
+    SharedSanitaryDevice(double flow, uint8_t amount) : SanitaryDevice(flow), amount(amount) {}
+
+    // Método de acesso (getter)
+    uint8_t getAmount() const { return amount; }
+
+    // Método sobrescrito
+    void use(uint8_t intensity_percent, uint16_t duration, uint32_t time_start, Resident& resi, House& house) override {
+        std::cout << "Usando dispositivo individual com fluxo de " << getFlow() << " L/s e quantidade: " << getAmount() << std::endl;
+    }
+};
+
+// Classe para dispositivos coletivos, sem o atributo 'amount'
+class UnsharedSanitaryDevice : public SanitaryDevice
+{
+public:
+    // Construtor que inicializa apenas o fluxo
+    UnsharedSanitaryDevice(double flow) : SanitaryDevice(flow) {}
+
+    // Método sobrescrito
+    void use(uint8_t intensity_percent, uint16_t duration, uint32_t time_start, Resident& resi, House& house) override {
+        std::cout << "Usando dispositivo coletivo com fluxo de " << getFlow() << " L/s." << std::endl;
+    }
+};
+
+
+// Classe Toilet
+class Toilet : public SharedSanitaryDevice
+{
+public:
+    Toilet(double flow, uint8_t amount) : SharedSanitaryDevice(flow, amount) {}
+
+    void use() override {
+    }
+};
+
+// Classe Shower
+class Shower : public SharedSanitaryDevice
+{
+public:
+    Shower(double flow, uint8_t amount) : SharedSanitaryDevice(flow, amount) {}
+
+    void use() override {
+        std::cout << "Tomando banho com fluxo de " << getFlow() << " L/s." << std::endl;
+    }
+};
+
+// Classe WashBassin
+class WashBassin : public SharedSanitaryDevice
+{
+public:
+    WashBassin(double flow, uint8_t amount) : SharedSanitaryDevice(flow, amount) {}
+
+    void use() override {
+        std::cout << "Usando a pia com fluxo de " << getFlow() << " L/s." << std::endl;
+    }
+};
+
+// Classe WashMachine
+class WashMachine : public UnsharedSanitaryDevice
+{
+public:
+    WashMachine(double flow) : UnsharedSanitaryDevice(flow) {}
+
+    void use() override {
+        std::cout << "Usando a máquina de lavar roupas com fluxo de " << getFlow() << " L/s." << std::endl;
+    }
+};
+
+// Classe DishWasher
+class DishWasher : public UnsharedSanitaryDevice
+{
+public:
+    DishWasher(double flow) : UnsharedSanitaryDevice(flow) {}
+
+    void use() override {
+        std::cout << "Usando a lava-louças com fluxo de " << getFlow() << " L/s." << std::endl;
+    }
+};
+
+// Classe Tanque
+class Tanque : public UnsharedSanitaryDevice
+{
+public:
+    Tanque(double flow) : UnsharedSanitaryDevice(flow) {}
+
+    void use() override {
+        std::cout << "Usando o tanque com fluxo de " << getFlow() << " L/s." << std::endl;
+    }
+};

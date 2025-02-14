@@ -1,0 +1,30 @@
+Sequência de funções:
+1) Função "Geracao_de_dados": 
+	
+- Inicialmente,deve-se definir o nome do arquivo de dados, o tipo de bacia e chuveiro (eficiente ou não) ["tipo_bacia" "tipo_chuveiro"], e número de domicílios ["Ndoms"].
+
+
+1.2) Função "inicia_variáveis";
+
+	- A função "inicia_variaveis" está dentro do primeiro código "Geracao_de_dados";
+	- Nela serão gerados os números de moradores para cada domicílio pela função de distribuição gama;
+	- Função "sorteia_pessoas" :  define a idade de cada pessoa de cada domicíio e o tipo de pessoa para definir o horário de pico de uso dos equipamentos;
+	- Função "sorteia_sanitarios": define a quantidade de sanitários, segundo a probabilidade do IBGE.
+
+
+	- Para cada número demoradores de cada domicílio é feito um sorteio do uso dos equipamentos pelas funções:
+		-Chuveiro: "uso_chuveiro""chuveiro_function" "sorteio_hor_bacia" 
+		- Bacia: "uso_bacia" "bacia_function" "sorteio_hor_chuveiro"
+		- Maquina de lavar: "uso_maquina" "maquina_function" "sorteio_hor_maquina"
+		- Pia da cozinha: "uso_pia" "pia_cozinha_function" "sorteio_hor_pia"
+		- Lavatório: "uso_lavatorio" "lavatorio_function" "hor_lavatorio"
+		- Tanque: "uso_tanque" "tanque_function" "sorteio_hor_tanque"
+2) Analisar
+- Inicialmente define o número de horas da análise e carrega os dados da análise anterior a partir do nome do arquivo salvo na função "Geracao_de_dados"
+
+2.1) Função simul
+	- Faz a vetor de vazão [Q] receber os dados de vazão em escala horária de cada aparelho, a partir das funções "totaliza" e "totaliza2".
+
+	2.1.1) Função "totaliza" e "totaliza2"
+	- Define o horário de início e fim de uso dos equipamentos a partir da duração e intensidade de cada aparelho.
+
