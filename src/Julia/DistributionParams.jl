@@ -10,12 +10,12 @@ struct UniformDistParams <: DistParams
 	high::Float64
 end
 
-function NormalDistParams(mean, std)
+function create_NormalDistParamns(mean, std)
 	std > 0 || throw(ArgumentError("Desvio padrão deve ser positivo."))
-	return NormalDistParams(Float64(mean), Float64(std))
+	return Normal(Float64(mean), Float64(std))
 end
 
-function UniformDistParams(low, high)
+function create_UniformDistParams(low, high)
 	low < high || throw(ArgumentError("O limite inferior deve ser menor que o superior."))
-	return UniformDistParams(Float64(low), Float64(high))
+	return Uniform(Float64(low), Float64(high))
 end

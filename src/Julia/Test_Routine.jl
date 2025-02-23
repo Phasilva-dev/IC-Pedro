@@ -2,68 +2,68 @@ using Test, Distributions, Random, Plots
 gr()
 include("DistributionParams.jl")
 include("Routine.jl")
-include("RoutineProfile.jl")
+include("Profiles.jl")
 
 # Teste para a struct LeaveReturnDist
 @testset "LeaveReturnDist Tests" begin
     # Criação de uma instância de LeaveReturnDist
-    leaveTime = NormalDistParams(8 * 3600, 3600)  # 8:00 com desvio padrão de 1 hora
-    returnTime = NormalDistParams(18 * 3600, 3600)  # 18:00 com desvio padrão de 1 hora
+    leaveTime = Normal(8 * 3600, 3600)  # 8:00 com desvio padrão de 1 hora
+    returnTime = Normal(18 * 3600, 3600)  # 18:00 com desvio padrão de 1 hora
     leave_return = LeaveReturnDist(leaveTime, returnTime)
     
     # Testes de assertiva
-    @test leave_return.leaveTime.mean == 8 * 3600
-    @test leave_return.leaveTime.std == 3600
-    @test leave_return.returnTime.mean == 18 * 3600
-    @test leave_return.returnTime.std == 3600
+    @test leave_return.leaveTime.μ == 8 * 3600
+    @test leave_return.leaveTime.σ == 3600
+    @test leave_return.returnTime.μ == 18 * 3600
+    @test leave_return.returnTime.σ == 3600
 end
 
 @testset "RoutineProfile Tests" begin
 	# Criando parâmetros de distribuição para os horários
-	wakeUp = NormalDistParams(7 * 3600, 1800)  # Acordar às 7:00 com desvio de 30 min
-	sleep = NormalDistParams(23 * 3600, 1800)   # Dormir às 23:00 com desvio de 30 min
+	wakeUp = Normal(7 * 3600, 1800)  # Acordar às 7:00 com desvio de 30 min
+	sleep = Normal(23 * 3600, 1800)   # Dormir às 23:00 com desvio de 30 min
 
 	# Caso 1: Rotina sem eventos
 	profile_without_events = create_routine_profile(:default, wakeUp, sleep, nothing)
 
 	@test profile_without_events isa RoutineProfileWithoutEvents
-	@test profile_without_events.wakeUpTime.mean == 7 * 3600
-	@test profile_without_events.wakeUpTime.std == 1800
-	@test profile_without_events.sleepTime.mean == 23 * 3600
-	@test profile_without_events.sleepTime.std == 1800
+	@test profile_without_events.wakeUpTime.μ == 7 * 3600
+	@test profile_without_events.wakeUpTime.σ == 1800
+	@test profile_without_events.sleepTime.μ == 23 * 3600
+	@test profile_without_events.sleepTime.σ == 1800
 	@test !isdefined(profile_without_events, :leaveReturnTimes)  # Não deve ter eventos
 
 	# Criando eventos de saída e retorno
-	leave_time_1 = NormalDistParams(8 * 3600, 1800)   # Saída às 8:00
-	return_time_1 = NormalDistParams(17 * 3600, 1800) # Retorno às 17:00
+	leave_time_1 = Normal(8 * 3600, 1800)   # Saída às 8:00
+	return_time_1 = Normal(17 * 3600, 1800) # Retorno às 17:00
 	leave_return_1 = LeaveReturnDist(leave_time_1, return_time_1)
 
-	leave_time_2 = NormalDistParams(9 * 3600, 1200)   # Saída às 9:00
-	return_time_2 = NormalDistParams(18 * 3600, 1200) # Retorno às 18:00
+	leave_time_2 = Normal(9 * 3600, 1200)   # Saída às 9:00
+	return_time_2 = Normal(18 * 3600, 1200) # Retorno às 18:00
 	leave_return_2 = LeaveReturnDist(leave_time_2, return_time_2)
 
 	# Caso 2: Rotina com múltiplos eventos
 	profile_with_events = create_routine_profile(:worker, wakeUp, sleep, [leave_return_1, leave_return_2])
 
 	@test profile_with_events isa RoutineProfileWithEvents
-	@test profile_with_events.wakeUpTime.mean == 7 * 3600
-	@test profile_with_events.sleepTime.mean == 23 * 3600
+	@test profile_with_events.wakeUpTime.μ == 7 * 3600
+	@test profile_with_events.sleepTime.μ == 23 * 3600
 	@test length(profile_with_events.leaveReturnTimes) == 2
 
 	# Verificando primeiro evento
-	@test profile_with_events.leaveReturnTimes[1].leaveTime.mean == 8 * 3600
-	@test profile_with_events.leaveReturnTimes[1].returnTime.mean == 17 * 3600
+	@test profile_with_events.leaveReturnTimes[1].leaveTime.μ == 8 * 3600
+	@test profile_with_events.leaveReturnTimes[1].returnTime.μ == 17 * 3600
 
 	# Verificando segundo evento
-	@test profile_with_events.leaveReturnTimes[2].leaveTime.mean == 9 * 3600
-	@test profile_with_events.leaveReturnTimes[2].returnTime.mean == 18 * 3600
+	@test profile_with_events.leaveReturnTimes[2].leaveTime.μ == 9 * 3600
+	@test profile_with_events.leaveReturnTimes[2].returnTime.μ == 18 * 3600
 
 	# Caso 3: Rotina com um único evento
 	profile_single_event = create_routine_profile(:student, wakeUp, sleep, leave_return_1)
 	
 	@test profile_single_event isa RoutineProfileWithOneEvent
-	@test profile_single_event.event.leaveTime.mean == 8 * 3600
-	@test profile_single_event.event.returnTime.mean == 17 * 3600
+	@test profile_single_event.event.leaveTime.μ == 8 * 3600
+	@test profile_single_event.event.returnTime.μ == 17 * 3600
 end
 
 @testset "generate_cyclic_time Tests" begin
@@ -96,7 +96,7 @@ end
 
 	# Plotar cada caso em uma figura separada
 	for (mean, std, name) in cases
-			dist = NormalDistParams(mean, std)
+			dist = Normal(mean, std)
 			times = [generate_cyclic_time(rng, dist) for _ in 1:1000]
 			
 			@test all(0 .<= times .<= DAY_IN_SECONDS)
@@ -109,23 +109,23 @@ end
 @testset "Routine Test" begin
 	# Definindo os parâmetros do perfil
 	name = :clt
-	dist1 = NormalDistParams(5.5 * 3600, 3600)   # Acordar (5.5h, 1h)
-	dist2 = NormalDistParams(7.5 * 3600, 1800)    # Sair para o trabalho (7.5h, 30min)
-	dist3 = NormalDistParams(18 * 3600, 3600)     # Voltar para casa (18h, 1h)
-	dist4 = NormalDistParams(22 * 3600, 3600)     # Dormir (22h, 1h)
-	
+	dist1 = Normal(5.5 * 3600, 1800)   # Acordar (5.5h, 1h)
+	dist2 = Normal(7.5 * 3600, 1800)    # Sair para o trabalho (7.5h, 30min)
+	dist3 = Normal(18 * 3600, 1800)     # Voltar para casa (18h, 1h)
+	dist4 = Normal(22 * 3600, 1800)     # Dormir (22h, 1h)
+	tamanho = 10000
 	leaveReturn = LeaveReturnDist(dist2, dist3)
 	profile = RoutineProfileWithOneEvent(name, dist1, dist4, leaveReturn)
 	
 	# Inicializando o gerador de números aleatórios
 	rng = MersenneTwister(42)
-	minimum_gap = Int32(300)  # gap mínimo de 5 minutos (300 segundos)
+	minimum_gap = UInt32(300)  # gap mínimo de 5 minutos (300 segundos)
 	
 	# Criando 1000 instâncias de RoutineWithOneEvent
-	routines = [create_routine(profile, rng, minimum_gap) for _ in 1:1000]
+	routines = [create_routine(profile, rng, minimum_gap) for _ in 1:tamanho]
 	
 	# Verificando se foram criadas 1000 instâncias
-	@test length(routines) == 1000
+	@test length(routines) == tamanho
 	
 	# Extraindo os tempos de interesse de cada rotina
 	wakeUp_times = [routine.wakeUp for routine in routines]
