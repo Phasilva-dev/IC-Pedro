@@ -38,7 +38,7 @@ impl fmt::Display for DistType {
 /// Trait para distribuições que suportam amostragem.
 pub trait Dist: fmt::Display + Serialize {
     /// Gera uma amostra da distribuição usando um gerador de números aleatórios.
-    /// 
+    ///
     /// # Argumentos
     /// * `rng` - Referência mutável a um gerador de números aleatórios.
     ///
@@ -57,7 +57,6 @@ impl Dist for DistType {
     }
 }
 
-
 /// Cria uma distribuição com base no tipo e nos parâmetros fornecidos.
 ///
 /// # Argumentos
@@ -65,105 +64,35 @@ impl Dist for DistType {
 /// * `params` - Vetor de parâmetros (ex.: `[mean, std_dev]` para normal).
 ///
 /// # Retorno
-/// `Ok(DistType)` com a distribuição criada, ou `Err(String)` se os parâmetros forem inválidos.
+/// `Ok(DistType)` com a distribuição criada, ou `Err(Box<dyn std::error::Error>)` se os parâmetros forem inválidos.
 ///
 /// # Exemplos
 /// ```
 /// let dist = stat_dists::create_distribution("normal", &[0.0, 1.0]).unwrap();
 /// ```
-pub fn create_distribution(dist_type: &str, params: &[f64]) -> Result<DistType, String> {
+pub fn create_distribution(dist_type: &str, params: &[f64]) -> Result<DistType, Box<dyn std::error::Error>> {
     match dist_type {
         "normal" => {
             if params.len() != 2 {
-                return Err("Normal requer exatamente 2 parâmetros: mean e stdDev".to_string());
+                return Err("Normal requer exatamente 2 parâmetros: mean e stdDev".into());
             }
-            Ok(DistType::Normal(NormalDist::new(params[0], params[1])))
+            let normal = NormalDist::new(params[0], params[1])?;
+            Ok(DistType::Normal(normal))
         }
         "poisson" => {
             if params.len() != 1 {
-                return Err("Poisson requer exatamente 1 parâmetro: lambda".to_string());
+                return Err("Poisson requer exatamente 1 parâmetro: lambda".into());
             }
-            Ok(DistType::Poisson(PoissonDist::new(params[0])?))
+            let poisson = PoissonDist::new(params[0])?;
+            Ok(DistType::Poisson(poisson))
         }
         "uniform" => {
             if params.len() != 2 {
-                return Err("Uniform requer exatamente 2 parâmetros: min e max".to_string());
+                return Err("Uniform requer exatamente 2 parâmetros: min e max".into());
             }
-            Ok(DistType::Uniform(UniformDist::new(params[0], params[1])?))
+            let uniform = UniformDist::new(params[0], params[1])?;
+            Ok(DistType::Uniform(uniform))
         }
-        _ => Err("Tipo de distribuição desconhecido".to_string()),
+        _ => Err("Tipo de distribuição desconhecido".into()),
     }
 }
-/* 
-// Testes unitários ajustados para usar StdRng
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rand::SeedableRng;
-    use rand::rngs::StdRng;
-
-    #[test]
-    fn test_create_normal_distribution() {
-        let dist = create_distribution("normal", &[0.0, 1.0]).unwrap();
-        match dist {
-            DistType::Normal(n) => {
-                assert_eq!(n.mean(), 0.0);
-                assert_eq!(n.std_dev(), 1.0);
-                let mut rng = StdRng::seed_from_u64(42);
-                let sample = n.sample(&mut rng).unwrap();
-                assert!(sample.is_finite(), "Amostra deve ser finita");
-            }
-            _ => panic!("Esperava uma NormalDist"),
-        }
-    }
-
-    #[test]
-    fn test_create_poisson_distribution() {
-        let dist = create_distribution("poisson", &[3.0]).unwrap();
-        match dist {
-            DistType::Poisson(p) => {
-                assert_eq!(p.lambda(), 3.0);
-                let mut rng = StdRng::seed_from_u64(42);
-                let sample = p.sample(&mut rng).unwrap();
-                assert!(sample >= 0.0, "Amostra Poisson deve ser não-negativa");
-            }
-            _ => panic!("Esperava uma PoissonDist"),
-        }
-    }
-
-    #[test]
-    fn test_create_uniform_distribution() {
-        let dist = create_distribution("uniform", &[0.0, 10.0]).unwrap();
-        match dist {
-            DistType::Uniform(u) => {
-                assert_eq!(u.min(), 0.0);
-                assert_eq!(u.max(), 10.0);
-                let mut rng = StdRng::seed_from_u64(42);
-                let sample = u.sample(&mut rng).unwrap();
-                assert!(
-                    sample >= 0.0 && sample < 10.0,
-                    "Amostra deve estar no intervalo [0, 10)"
-                );
-            }
-            _ => panic!("Esperava uma UniformDist"),
-        }
-    }
-
-    #[test]
-    fn test_invalid_distribution() {
-        let result = create_distribution("invalid", &[]);
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), "Tipo de distribuição desconhecido");
-    }
-
-    #[test]
-    fn test_wrong_params() {
-        let result = create_distribution("normal", &[0.0]); // Faltando std_dev
-        assert!(result.is_err());
-        assert_eq!(
-            result.unwrap_err(),
-            "Normal requer exatamente 2 parâmetros: mean e stdDev"
-        );
-    }
-}
-		*/

@@ -1,17 +1,26 @@
 use rand::Rng;
-use rand_distr::{Distribution, Normal};
-use serde::Serialize;
+use rand_distr::{Normal, Distribution};
+use serde::{Serialize, Deserialize, Deserializer, Serializer};
 use std::fmt;
 
-#[derive(Serialize)]
-pub struct NormalDist {
+// Estrutura intermediária para serialização/desserialização
+#[derive(Serialize, Deserialize)]
+struct NormalDistData {
     mean: f64,
     std_dev: f64,
 }
 
+#[derive(Debug)]
+pub struct NormalDist {
+    mean: f64,
+    std_dev: f64,
+    normal: Normal<f64>,
+}
+
 impl NormalDist {
-    pub fn new(mean: f64, std_dev: f64) -> Self {
-        NormalDist { mean, std_dev }
+    pub fn new(mean: f64, std_dev: f64) -> Result<Self, Box<dyn std::error::Error>> {
+        let normal = Normal::new(mean, std_dev)?;
+        Ok(NormalDist { mean, std_dev, normal })
     }
 
     pub fn mean(&self) -> f64 {
@@ -31,8 +40,40 @@ impl fmt::Display for NormalDist {
 
 impl super::Dist for NormalDist {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Result<f64, Box<dyn std::error::Error>> {
-        let normal = Normal::new(self.mean, self.std_dev)
-            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
-        Ok(normal.sample(rng))
+        Ok(self.normal.sample(rng))
+    }
+}
+
+// Implementação de Serialize
+impl Serialize for NormalDist {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        // Serializa apenas mean e std_dev
+        let data = NormalDistData {
+            mean: self.mean,
+            std_dev: self.std_dev,
+        };
+        data.serialize(serializer)
+    }
+}
+
+// Implementação de Deserialize
+impl<'de> Deserialize<'de> for NormalDist {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        // Desserializa em uma estrutura temporária
+        let data = NormalDistData::deserialize(deserializer)?;
+        // Recria o campo normal usando mean e std_dev
+        let normal = Normal::new(data.mean, data.std_dev)
+            .map_err(serde::de::Error::custom)?;
+        Ok(NormalDist {
+            mean: data.mean,
+            std_dev: data.std_dev,
+            normal,
+        })
     }
 }
