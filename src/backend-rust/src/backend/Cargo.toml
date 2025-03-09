@@ -1,0 +1,8 @@
+[package]
+name = "backend"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+stat_dists = { path = "../stat_dists" }
+rand = "0.8.5"
